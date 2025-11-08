@@ -39,7 +39,7 @@ Each player takes 7 turns, making strategic decisions that ripple across the boa
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/dandelions-game.git
+   git clone https://github.com/bberki/dandelions_game.git
    cd dandelions-game
    ```
 
