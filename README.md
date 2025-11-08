@@ -4,7 +4,7 @@ A strategic pen-and-paper game brought to life on the web! Two players compete i
 
 ## 🎮 Play Now
 
-[Play the game here](https://bberki.github.io/dandelions_game) *(replace with your actual GitHub Pages URL)*
+[Play the game here](https://bberki.github.io/dandelions_game)
 
 ## 📖 About
 
