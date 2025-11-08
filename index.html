@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dandelions Game</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const DandelionGame = () => {
+          const [gridSize] = useState(5);
+          const [board, setBoard] = useState(Array(5).fill(null).map(() => Array(5).fill(null)));
+          const [turn, setTurn] = useState('dandelion');
+          const [round, setRound] = useState(1);
+          const [usedDirections, setUsedDirections] = useState([]);
+          const [gameOver, setGameOver] = useState(false);
+          const [winner, setWinner] = useState(null);
+
+          const directions = [
+            { name: 'N', dx: 0, dy: -1 },
+            { name: 'NE', dx: 1, dy: -1 },
+            { name: 'E', dx: 1, dy: 0 },
+            { name: 'SE', dx: 1, dy: 1 },
+            { name: 'S', dx: 0, dy: 1 },
+            { name: 'SW', dx: -1, dy: 1 },
+            { name: 'W', dx: -1, dy: 0 },
+            { name: 'NW', dx: -1, dy: -1 }
+          ];
+
+          const FlowerIcon = () => (
+            <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C10.34 2 9 3.34 9 5c0 .74.27 1.42.71 1.95C8.64 7.29 8 8.54 8 10c0 1.66 1.34 3 3 3 .74 0 1.42-.27 1.95-.71.34.44.59.97.71 1.55-.53.34-1.16.66-1.66.66-1.66 0-3 1.34-3 3s1.34 3 3 3c.5 0 .97-.13 1.39-.34.29.76.85 1.39 1.61 1.73V22h2v-.11c.76-.34 1.32-.97 1.61-1.73.42.21.89.34 1.39.34 1.66 0 3-1.34 3-3s-1.34-3-3-3c-.5 0-1.13.32-1.66.66.12-.58.37-1.11.71-1.55.53.44 1.21.71 1.95.71 1.66 0 3-1.34 3-3 0-1.46-.74-2.71-1.81-3.05.44-.53.71-1.21.71-1.95 0-1.66-1.34-3-3-3s-3 1.34-3 3c0 .74.27 1.42.71 1.95C13.42 7.27 13 8.54 13 10c0 .52.13 1 .34 1.45-.42.29-.74.71-.95 1.21-.21-.5-.53-.92-.95-1.21.21-.45.34-.93.34-1.45 0-1.46-.74-2.71-1.81-3.05.44-.53.71-1.21.71-1.95C10 3.34 8.66 2 7 2S4 3.34 4 5c0 .74.27 1.42.71 1.95C3.64 7.29 3 8.54 3 10c0 1.66 1.34 3 3 3 .74 0 1.42-.27 1.95-.71.34.44.59.97.71 1.55-.53.34-1.16.66-1.66.66-1.66 0-3 1.34-3 3s1.34 3 3 3c.5 0 .97-.13 1.39-.34.29.76.85 1.39 1.61 1.73V22h2v-.11c.76-.34 1.32-.97 1.61-1.73.42.21.89.34 1.39.34z"/>
+            </svg>
+          );
+
+          const WindIcon = () => (
+            <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          );
+
+          const plantDandelion = (row, col) => {
+            if (turn !== 'dandelion' || gameOver) return;
+            
+            const newBoard = board.map(r => [...r]);
+            newBoard[row][col] = 'flower';
+            setBoard(newBoard);
+            setTurn('wind');
+          };
+
+          const blowWind = (direction) => {
+            if (turn !== 'wind' || gameOver || usedDirections.includes(direction.name)) return;
+
+            const newBoard = board.map(r => [...r]);
+            
+            for (let row = 0; row < gridSize; row++) {
+              for (let col = 0; col < gridSize; col++) {
+                if (newBoard[row][col] === 'flower') {
+                  let currentRow = row + direction.dy;
+                  let currentCol = col + direction.dx;
+                  
+                  while (currentRow >= 0 && currentRow < gridSize && 
+                         currentCol >= 0 && currentCol < gridSize) {
+                    if (newBoard[currentRow][currentCol] === null) {
+                      newBoard[currentRow][currentCol] = 'seed';
+                    }
+                    currentRow += direction.dy;
+                    currentCol += direction.dx;
+                  }
+                }
+              }
+            }
+
+            setBoard(newBoard);
+            setUsedDirections([...usedDirections, direction.name]);
+            
+            if (round === 7) {
+              checkWinner(newBoard);
+            } else {
+              setRound(round + 1);
+              setTurn('dandelion');
+            }
+          };
+
+          const checkWinner = (finalBoard) => {
+            const isFull = finalBoard.every(row => row.every(cell => cell !== null));
+            setGameOver(true);
+            setWinner(isFull ? 'Dandelions' : 'Wind');
+          };
+
+          const resetGame = () => {
+            setBoard(Array(5).fill(null).map(() => Array(5).fill(null)));
+            setTurn('dandelion');
+            setRound(1);
+            setUsedDirections([]);
+            setGameOver(false);
+            setWinner(null);
+          };
+
+          const getCellContent = (cell) => {
+            if (cell === 'flower') return <FlowerIcon />;
+            if (cell === 'seed') return <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>;
+            return null;
+          };
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-8">
+              <div className="max-w-4xl mx-auto">
+                <h1 className="text-4xl font-bold text-center mb-2 text-green-800">Dandelions</h1>
+                <p className="text-center text-gray-600 mb-8">A strategic game of flowers and wind</p>
+
+                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="text-lg font-semibold">
+                      Round: {round}/7
+                    </div>
+                    <div className={`text-lg font-semibold px-4 py-2 rounded-lg ${
+                      turn === 'dandelion' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {gameOver ? 'Game Over!' : `${turn === 'dandelion' ? '🌼 Dandelions' : '💨 Wind'}'s Turn`}
+                    </div>
+                    <button 
+                      onClick={resetGame}
+                      className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-semibold"
+                    >
+                      New Game
+                    </button>
+                  </div>
+
+                  {gameOver && (
+                    <div className="mb-4 p-4 bg-green-100 border-2 border-green-500 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-green-800">
+                        {winner} Win{winner === 'Dandelions' ? '!' : 's!'}
+                      </div>
+                      <div className="text-gray-700 mt-2">
+                        {winner === 'Dandelions' 
+                          ? 'The entire meadow is covered with dandelions!'
+                          : 'The wind has left gaps in the meadow!'}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-8 justify-center items-start flex-wrap">
+                    <div className="flex flex-col items-center">
+                      <div className="inline-block border-4 border-green-600 rounded-lg overflow-hidden">
+                        {board.map((row, rowIdx) => (
+                          <div key={rowIdx} className="flex">
+                            {row.map((cell, colIdx) => (
+                              <div
+                                key={`${rowIdx}-${colIdx}`}
+                                onClick={() => plantDandelion(rowIdx, colIdx)}
+                                className={`w-16 h-16 border border-green-300 flex items-center justify-center
+                                  ${turn === 'dandelion' && !gameOver && cell !== 'flower' ? 'hover:bg-yellow-50 cursor-pointer' : ''}
+                                  ${cell === 'flower' ? 'bg-yellow-100' : cell === 'seed' ? 'bg-green-50' : 'bg-white'}
+                                `}
+                              >
+                                {getCellContent(cell)}
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-center">
+                      <h3 className="text-lg font-semibold mb-3 text-gray-700">Wind Directions</h3>
+                      <div className="relative w-48 h-48">
+                        {directions.map((dir, idx) => {
+                          const angle = (idx * 45) - 90;
+                          const radius = 70;
+                          const x = Math.cos(angle * Math.PI / 180) * radius;
+                          const y = Math.sin(angle * Math.PI / 180) * radius;
+                          const used = usedDirections.includes(dir.name);
+                          
+                          return (
+                            <button
+                              key={dir.name}
+                              onClick={() => blowWind(dir)}
+                              disabled={used || turn !== 'wind' || gameOver}
+                              className={`absolute w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm
+                                transform -translate-x-1/2 -translate-y-1/2 transition-all
+                                ${used ? 'bg-gray-300 text-gray-500 line-through' : 
+                                  turn === 'wind' && !gameOver ? 'bg-blue-500 hover:bg-blue-600 text-white cursor-pointer hover:scale-110' : 
+                                  'bg-blue-300 text-white'}
+                              `}
+                              style={{
+                                left: `calc(50% + ${x}px)`,
+                                top: `calc(50% + ${y}px)`
+                              }}
+                            >
+                              {dir.name}
+                            </button>
+                          );
+                        })}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          <WindIcon />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <h2 className="text-2xl font-bold mb-4 text-green-800">How to Play</h2>
+                  <div className="space-y-3 text-gray-700">
+                    <p><strong>Goal:</strong> Dandelions win if they cover the entire board. Wind wins if any square remains empty.</p>
+                    <p><strong>🌼 Dandelions:</strong> Click any square to plant a flower (even on seeds).</p>
+                    <p><strong>💨 Wind:</strong> Click a direction to blow. Seeds spread from all flowers in that direction.</p>
+                    <p><strong>Rules:</strong> 7 rounds total. Each wind direction can only be used once. One direction will remain unused!</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        ReactDOM.render(<DandelionGame />, document.getElementById('root'));
+    </script>
+</body>
+</html>
